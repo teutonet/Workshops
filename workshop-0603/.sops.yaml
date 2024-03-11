@@ -1,0 +1,8 @@
+creation_rules:
+- path_regex: .*.yaml
+  encrypted_regex: ^(data|stringData)$
+  key_groups:
+  # First key group
+  - pgp:
+    - F4C572E96E8896CE # workshop-cluster
+    - <other-key-fp> # user@example.com

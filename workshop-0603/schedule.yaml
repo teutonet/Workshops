@@ -1,0 +1,10 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: workshop
+  namespace: backup
+spec:
+  schedule: "*/5 * * * *"
+  template:
+    defaultVolumesToRestic: true
+    ttl: 168h0m0s

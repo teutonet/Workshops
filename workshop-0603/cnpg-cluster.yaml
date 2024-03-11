@@ -1,0 +1,38 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres
+  namespace: default
+spec:
+  instances: 3
+  storage:
+    size: 1Gi
+  managed:
+    roles:
+    - name: anon
+      ensure: present
+      login: false
+      superuser: false
+      inRoles:
+        - supabase
+  bootstrap:
+    initdb:
+      database: supabase
+      owner: supabase
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    cnpg.io/cluster: postgres
+    managed.by/monitoring: teutonet
+  name: postgres
+  namespace: default
+spec:
+  podMetricsEndpoints:
+  - bearerTokenSecret:
+      key: ""
+    port: metrics
+  selector:
+    matchLabels:
+      cnpg.io/cluster: postgres

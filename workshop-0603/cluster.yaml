@@ -1,0 +1,81 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: base-cluster
+  namespace: flux-system
+spec:
+  chart:
+    spec:
+      chart: base-cluster
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: teuto-net
+        namespace: flux-system
+      version: 5.x.x
+  interval: 1m0s
+  valuesFrom:
+    - kind: Secret
+      name: workshop-velero-secret
+      valuesKey: aws_access_key_id
+      targetPath: backup.backupStorageLocations.s3-os.provider.minio.accessKeyID
+    - kind: Secret
+      name: workshop-velero-secret
+      valuesKey: aws_secret_access_key
+      targetPath: backup.backupStorageLocations.s3-os.provider.minio.secretAccessKey
+  values:
+    backup:
+      defaultLocation: s3-os
+      backupStorageLocations:
+        s3-os:
+          provider:
+            minio:
+              url: https://<url-to-endpoint>:6780
+          bucket: workshop-0603
+          prefix: workshop-0603/backup
+    global:
+      clusterName: 1111-workshop-cluster-0603
+      namespaces:
+        database-operators: {}
+      helmRepositories:
+        cloudnative-pg:
+          url: https://cloudnative-pg.io/charts/
+    flux:
+      gitRepositories:
+        main:
+          url: ssh://git@tickets.teuto.net/4teuto/cust/1111/workshop/workshop-cluster-0603/flux-main.git
+          branch: main
+          decryption:
+            provider: sops
+    rbac:
+      roles:
+        admin:
+          - apiGroups:
+              - "*"
+            resources:
+              - "*"
+            verbs:
+              - "*"
+          - nonResourceURLs:
+              - "*"
+            verbs:
+              - "*"
+        view:
+          - apiGroups:
+              - "*"
+            resources:
+              - "*"
+            verbs:
+              - get
+              - list
+              - watch
+      accounts:
+        dbadmin:
+          roles:
+            admin:
+              - database-operators
+        dbviewer:
+          roles:
+            view:
+              - database-operators
